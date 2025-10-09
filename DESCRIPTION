@@ -1,0 +1,27 @@
+Package: mintdb
+Title: Minimal Integration Toolkit for Databases
+Version: 0.0.0.9000
+Authors@R:
+    person(given = "Seokhoon", family = "Joo", role = c("aut", "cre"),
+           email = "seokhoonj@gmail.com")
+Description: 'mintdb' (Minimal Integration Toolkit for Databases) provides
+    a unified interface for connecting to multiple database backends 
+    (MariaDB, MySQL, PostgreSQL, SQLite, ODBC) using the 'DBI' framework. 
+    It supports optional connection pooling via 'pool' and includes simple 
+    environment-based helpers for connection setup and management.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+ByteCompile: true
+Imports:
+    askpass (>= 1.2.1),
+    DBI (>= 1.2.3),
+    pool (>= 1.0.4)
+Suggests:
+    data.table (>= 1.14.8),
+    odbc (>= 1.6.3),
+    RMariaDB (>= 1.3.3),
+    RPostgres (>= 1.4.8),
+    RSQLite (>= 2.4.3)
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
