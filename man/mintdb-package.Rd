@@ -35,8 +35,44 @@ This design makes \strong{mintdb} suitable for persistent R sessions,
 automated batch jobs, and reactive web apps where safe connection
 handling is crucial.
 }
+\section{Persistent setup via \code{.Renviron}}{
+
+While \code{set_db_conn_info()} is convenient for one-off sessions, you can persist
+your settings using environment variables in \verb{~/.Renviron} (or a project-local \code{.Renviron}).
+\enumerate{
+\item Open your \code{.Renviron}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{usethis::edit_r_environ()
+}\if{html}{\out{</div>}}
+\item Add the variables (example: PostgreSQL):
+
+\if{html}{\out{<div class="sourceCode ini">}}\preformatted{MINTDB_DRIVER=postgres
+MINTDB_HOST=localhost
+MINTDB_DBNAME=app
+MINTDB_USER=postgres
+MINTDB_PASSWORD=secret
+MINTDB_PORT=5432
+}\if{html}{\out{</div>}}
+
+For SQLite:
+
+\if{html}{\out{<div class="sourceCode ini">}}\preformatted{MINTDB_DRIVER=sqlite
+MINTDB_FILEPATH=data/app.sqlite
+}\if{html}{\out{</div>}}
+\item Restart R, then simply call:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{.rs.restartR()
+set_db_conn()
+}\if{html}{\out{</div>}}
+}
+
+\emph{Security tip:} do \strong{not} commit \code{.Renviron} to version control. Prefer environment
+variables for secrets. For advanced, profile-based setups, consider using a YAML
+file and a loader (e.g., \code{load_db_conn_info_yaml("mintdb.yml", profile = "prod")}).
+}
+
 \seealso{
-\code{\link[DBI:dbConnect]{DBI::dbConnect()}}, \code{\link[pool:dbPool]{pool::dbPool()}}, \code{\link[askpass:askpass]{askpass::askpass()}}
+\code{\link[DBI:dbConnect]{DBI::dbConnect()}}, \code{\link[pool:dbPool]{pool::dbPool()}}, \code{\link[askpass:askpass]{askpass::askpass()}}, \code{\link[usethis:edit]{usethis::edit_r_environ()}}
 }
 \author{
 \strong{Maintainer}: Seokhoon Joo \email{seokhoonj@gmail.com}

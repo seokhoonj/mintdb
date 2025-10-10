@@ -38,11 +38,45 @@ Invisibly returns \code{TRUE} (for side effect).
 }
 \description{
 Store database connection parameters as environment variables
-for later use by \code{\link[=set_db_conn]{set_db_conn()}}. If the \code{port} argument is omitted,
-a default port will be automatically assigned based on the database type:
+for later use by \code{\link[=set_db_conn]{set_db_conn()}}.
+These variables are stored \strong{only for the current R session}.
+To make them persistent across sessions, add them to your \verb{~/.Renviron}
+using \code{\link[usethis:edit]{usethis::edit_r_environ()}}.
+}
+\details{
+If the \code{port} argument is omitted, a default port will be automatically
+assigned based on the database type:
+
 \itemize{
 \item MariaDB / MySQL: 3306
 \item PostgreSQL: 5432
 \item SQLite / ODBC: no port used
 }
+}
+\section{Persistent setup (recommended)}{
+
+For repeated use (e.g., Shiny apps or scheduled scripts),
+it is better to define the following in your \verb{~/.Renviron} file:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{usethis::edit_r_environ()
+}\if{html}{\out{</div>}}
+
+Example entries:
+
+\if{html}{\out{<div class="sourceCode ini">}}\preformatted{MINTDB_DRIVER=postgres
+MINTDB_HOST=localhost
+MINTDB_DBNAME=app
+MINTDB_USER=postgres
+MINTDB_PASSWORD=secret
+MINTDB_PORT=5432
+}\if{html}{\out{</div>}}
+
+Then simply call:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{set_db_conn()
+}\if{html}{\out{</div>}}
+}
+
+\seealso{
+\code{\link[usethis:edit]{usethis::edit_r_environ()}}, \code{\link[=set_db_conn]{set_db_conn()}}, \code{\link[=get_db_conn]{get_db_conn()}}
 }

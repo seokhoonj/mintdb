@@ -28,8 +28,43 @@
 #' automated batch jobs, and reactive web apps where safe connection
 #' handling is crucial.
 #'
+#' @section Persistent setup via `.Renviron`:
+#' While `set_db_conn_info()` is convenient for one-off sessions, you can persist
+#' your settings using environment variables in `~/.Renviron` (or a project-local `.Renviron`).
+#'
+#' 1. Open your `.Renviron`:
+#'    ```r
+#'    usethis::edit_r_environ()
+#'    ```
+#'
+#' 2. Add the variables (example: PostgreSQL):
+#'    ```ini
+#'    MINTDB_DRIVER=postgres
+#'    MINTDB_HOST=localhost
+#'    MINTDB_DBNAME=app
+#'    MINTDB_USER=postgres
+#'    MINTDB_PASSWORD=secret
+#'    MINTDB_PORT=5432
+#'    ```
+#'
+#'    For SQLite:
+#'    ```ini
+#'    MINTDB_DRIVER=sqlite
+#'    MINTDB_FILEPATH=data/app.sqlite
+#'    ```
+#'
+#' 3. Restart R, then simply call:
+#'    ```r
+#'    .rs.restartR()
+#'    set_db_conn()
+#'    ```
+#'
+#' *Security tip:* do **not** commit `.Renviron` to version control. Prefer environment
+#' variables for secrets. For advanced, profile-based setups, consider using a YAML
+#' file and a loader (e.g., `load_db_conn_info_yaml("mintdb.yml", profile = "prod")`).
+#'
 #' @seealso
-#' [DBI::dbConnect()], [pool::dbPool()], [askpass::askpass()]
+#' [DBI::dbConnect()], [pool::dbPool()], [askpass::askpass()], [usethis::edit_r_environ()]
 #'
 #' @keywords internal
 #' @importFrom askpass askpass

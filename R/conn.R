@@ -1,13 +1,42 @@
 #' Set Database Connection Information
 #'
 #' Store database connection parameters as environment variables
-#' for later use by [set_db_conn()]. If the `port` argument is omitted,
-#' a default port will be automatically assigned based on the database type:
+#' for later use by [set_db_conn()].
+#' These variables are stored **only for the current R session**.
+#' To make them persistent across sessions, add them to your `~/.Renviron`
+#' using [usethis::edit_r_environ()].
+#'
+#' If the `port` argument is omitted, a default port will be automatically
+#' assigned based on the database type:
+#'
 #' \itemize{
 #'   \item MariaDB / MySQL: 3306
 #'   \item PostgreSQL: 5432
 #'   \item SQLite / ODBC: no port used
 #' }
+#'
+#' @section Persistent setup (recommended):
+#' For repeated use (e.g., Shiny apps or scheduled scripts),
+#' it is better to define the following in your `~/.Renviron` file:
+#'
+#' ```r
+#' usethis::edit_r_environ()
+#' ```
+#'
+#' Example entries:
+#' ```ini
+#' MINTDB_DRIVER=postgres
+#' MINTDB_HOST=localhost
+#' MINTDB_DBNAME=app
+#' MINTDB_USER=postgres
+#' MINTDB_PASSWORD=secret
+#' MINTDB_PORT=5432
+#' ```
+#'
+#' Then simply call:
+#' ```r
+#' set_db_conn()
+#' ```
 #'
 #' @param driver Character string specifying the DB type.
 #'   One of `"mariadb"`, `"mysql"`, `"postgres"`, `"sqlite"`, `"odbc"`.
@@ -20,6 +49,7 @@
 #' @param filepath For SQLite, path to the `.sqlite` file.
 #'
 #' @return Invisibly returns `TRUE` (for side effect).
+#' @seealso [usethis::edit_r_environ()], [set_db_conn()], [get_db_conn()]
 #' @export
 set_db_conn_info <- function(driver = c("mariadb", "mysql", "postgres", "sqlite", "odbc"),
                              host = "",
@@ -44,7 +74,7 @@ set_db_conn_info <- function(driver = c("mariadb", "mysql", "postgres", "sqlite"
   }
 
   # --------------------------------------------------------------------
-  # Store connection settings as environment variables
+  # Store connection settings as environment variables (session-only)
   # --------------------------------------------------------------------
   Sys.setenv(
     MINTDB_DRIVER   = driver,
