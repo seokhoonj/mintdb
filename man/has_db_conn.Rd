@@ -2,13 +2,22 @@
 % Please edit documentation in R/conn.R
 \name{has_db_conn}
 \alias{has_db_conn}
-\title{Check for an Active Database Connection}
+\title{Check if an Active Database Connection Exists}
 \usage{
 has_db_conn()
 }
 \value{
-Logical \code{TRUE} if the connection is active; otherwise an error is thrown.
+Logical:
+\itemize{
+\item \code{TRUE} if a valid database connection exists.
+\item \code{FALSE} if no connection or if the connection is invalid/closed.
+}
 }
 \description{
-Verify that a database connection (or pool) exists and is still valid.
+Safely test whether a database connection (or pool) is active and valid.
+Unlike \code{\link[=assert_db_conn]{assert_db_conn()}}, this function never throws an error — it simply
+returns \code{TRUE} or \code{FALSE}.
+}
+\seealso{
+\code{\link[=assert_db_conn]{assert_db_conn()}}, \code{\link[=set_db_conn]{set_db_conn()}}
 }

@@ -61,9 +61,7 @@ set_db_conn_info <- function(driver = c("mariadb", "mysql", "postgres", "sqlite"
                              filepath = "") {
   driver <- match.arg(driver)
 
-  # --------------------------------------------------------------------
   # Auto-assign default port if not provided
-  # --------------------------------------------------------------------
   if (is.null(port) || is.na(port) || port == "") {
     port <- switch(driver,
                    mariadb  = 3306L,
@@ -73,9 +71,7 @@ set_db_conn_info <- function(driver = c("mariadb", "mysql", "postgres", "sqlite"
                    odbc     = NA_integer_)
   }
 
-  # --------------------------------------------------------------------
   # Store connection settings as environment variables (session-only)
-  # --------------------------------------------------------------------
   Sys.setenv(
     MINTDB_DRIVER   = driver,
     MINTDB_HOST     = host,
@@ -88,21 +84,6 @@ set_db_conn_info <- function(driver = c("mariadb", "mysql", "postgres", "sqlite"
   )
 
   invisible(TRUE)
-}
-
-# ---------------------------------------------------------------------
-# Internal helper: return DBI driver instance based on driver name
-# ---------------------------------------------------------------------
-.mintdb_drv <- function(driver) {
-  switch(
-    driver,
-    mariadb  = RMariaDB::MariaDB(),
-    mysql    = RMariaDB::MariaDB(),  # MySQL shares same RMariaDB driver
-    postgres = RPostgres::Postgres(),
-    sqlite   = RSQLite::SQLite(),
-    odbc     = odbc::odbc(),
-    stop(sprintf("Unsupported driver: %s", driver))
-  )
 }
 
 #' Establish Database Connection (and Driver-Specific Wrappers)
@@ -134,9 +115,7 @@ set_db_conn_info <- function(driver = c("mariadb", "mysql", "postgres", "sqlite"
 #' @name set_db_conn
 #' @export
 set_db_conn <- function(use_pool = TRUE, ...) {
-  # -------------------------------------------------------------------
   # Close previous connection if exists
-  # -------------------------------------------------------------------
   if (exists(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE)) {
     old <- get(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE)
     if (!is.null(old)) {
@@ -148,9 +127,7 @@ set_db_conn <- function(use_pool = TRUE, ...) {
     rm(".MINTDB_CONN", envir = .MINTDB_ENV)
   }
 
-  # -------------------------------------------------------------------
   # Load connection parameters from environment
-  # -------------------------------------------------------------------
   drv_name <- Sys.getenv("MINTDB_DRIVER", "mariadb")
   host     <- Sys.getenv("MINTDB_HOST")
   dbname   <- Sys.getenv("MINTDB_DBNAME", "")
@@ -161,9 +138,7 @@ set_db_conn <- function(use_pool = TRUE, ...) {
   filepath <- Sys.getenv("MINTDB_FILEPATH", "")
   port     <- suppressWarnings(as.integer(port_chr))
 
-  # -------------------------------------------------------------------
   # Prompt for password if missing
-  # -------------------------------------------------------------------
   if (!nzchar(password)) {
     if (requireNamespace("askpass", quietly = TRUE)) {
       password <- askpass::askpass("DB Password: ")
@@ -172,9 +147,7 @@ set_db_conn <- function(use_pool = TRUE, ...) {
     }
   }
 
-  # -------------------------------------------------------------------
   # Build argument list by driver type
-  # -------------------------------------------------------------------
   args <- list()
   if (drv_name %in% c("mariadb", "mysql", "postgres")) {
     args <- list(dbname = dbname, host = host, user = user, password = password)
@@ -193,14 +166,10 @@ set_db_conn <- function(use_pool = TRUE, ...) {
     }
   }
 
-  # -------------------------------------------------------------------
   # Choose DBI driver object
-  # -------------------------------------------------------------------
   driver_obj <- .mintdb_drv(drv_name)
 
-  # -------------------------------------------------------------------
   # Create connection or pool
-  # -------------------------------------------------------------------
   if (use_pool && requireNamespace("pool", quietly = TRUE)) {
     message("Using connection pool...")
     conn <- do.call(pool::dbPool, c(list(drv = driver_obj), args, list(...)))
@@ -208,9 +177,7 @@ set_db_conn <- function(use_pool = TRUE, ...) {
     conn <- do.call(DBI::dbConnect, c(list(drv = driver_obj), args, list(...)))
   }
 
-  # -------------------------------------------------------------------
   # Optional initialization per DB type
-  # -------------------------------------------------------------------
   if (drv_name %in% c("mariadb", "mysql")) {
     DBI::dbExecute(conn, "SET NAMES 'utf8mb4'")
   }
@@ -318,6 +285,32 @@ set_db_disconn <- function() {
   invisible(TRUE)
 }
 
+#' Check if an Active Database Connection Exists
+#'
+#' Safely test whether a database connection (or pool) is active and valid.
+#' Unlike [assert_db_conn()], this function never throws an error — it simply
+#' returns `TRUE` or `FALSE`.
+#'
+#' @return Logical:
+#'   * `TRUE` if a valid database connection exists.
+#'   * `FALSE` if no connection or if the connection is invalid/closed.
+#'
+#' @seealso [assert_db_conn()], [set_db_conn()]
+#'
+#' @export
+has_db_conn <- function() {
+  if (!exists(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE))
+    return(FALSE)
+
+  conn <- get(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE)
+  ok <- try(DBI::dbIsValid(conn), silent = TRUE)
+
+  if (inherits(ok, "try-error") || !isTRUE(ok))
+    return(FALSE)
+
+  TRUE
+}
+
 #' Check for an Active Database Connection
 #'
 #' Verify that a database connection (or pool) exists and is still valid.
@@ -325,7 +318,7 @@ set_db_disconn <- function() {
 #' @return Logical `TRUE` if the connection is active; otherwise an error is thrown.
 #'
 #' @export
-has_db_conn <- function() {
+assert_db_conn <- function() {
   if (!exists(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE))
     stop("No active database connection found. Call set_db_conn() first.")
 
@@ -336,4 +329,19 @@ has_db_conn <- function() {
     stop("Database connection (or pool) is invalid or closed. Reconnect with set_db_conn().")
 
   TRUE
+}
+
+# Internal helper function ------------------------------------------------
+
+# Return DBI driver instance based on driver name
+.mintdb_drv <- function(driver) {
+  switch(
+    driver,
+    mariadb  = RMariaDB::MariaDB(),
+    mysql    = RMariaDB::MariaDB(),  # MySQL shares same RMariaDB driver
+    postgres = RPostgres::Postgres(),
+    sqlite   = RSQLite::SQLite(),
+    odbc     = odbc::odbc(),
+    stop(sprintf("Unsupported driver: %s", driver))
+  )
 }
