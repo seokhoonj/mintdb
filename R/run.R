@@ -30,8 +30,14 @@
 #' }
 #' @export
 query_db <- function(sql, params = list(), as_dt = FALSE) {
-  has_db_conn()
-  con <- get(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE)
+  assert_db_conn()
+  con <- get_db_conn()
+
+  if (inherits(con, "Pool")) {
+    handle <- pool::poolCheckout(con)
+    on.exit(pool::poolReturn(handle), add = TRUE)
+    con <- handle
+  }
 
   # If params provided, use prepared statement + bind; else plain dbGetQuery
   if (length(params)) {
@@ -43,7 +49,7 @@ query_db <- function(sql, params = list(), as_dt = FALSE) {
     out <- DBI::dbGetQuery(con, sql)
   }
 
-  if (isTRUE(as_dt) && requireNamespace("data.table", quietly = TRUE)) {
+  if (as_dt && requireNamespace("data.table", quietly = TRUE)) {
     out <- data.table::as.data.table(out)
   }
 
@@ -78,8 +84,14 @@ query_db <- function(sql, params = list(), as_dt = FALSE) {
 #' }
 #' @export
 exec_db <- function(sql, params = list()) {
-  has_db_conn()
-  con <- get(".MINTDB_CONN", envir = .MINTDB_ENV, inherits = FALSE)
+  assert_db_conn()
+  con <- get_db_conn()
+
+  if (inherits(con, "Pool")) {
+    handle <- pool::poolCheckout(con)
+    on.exit(pool::poolReturn(handle), add = TRUE)
+    con <- handle
+  }
 
   # Prefer dbExecute with params when supported; otherwise use send/bind path
   if (length(params)) {
